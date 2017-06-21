@@ -1,0 +1,56 @@
+\section{Missing Proofs} \label{sec:proof}
+\begin{proof}[proof of Lemma~\ref{lem:hybrid0}]
+We only need to prove adversary $\A$'s view is statistically indistinguishable between hybrid $\hybrid_0$ and $\hybrid_1$, and the same argument can be applied to the other case.. Note the differences between these two hybrids can be summarized below:
+\begin{itemize}[leftmargin=*]
+ \item In hybrid $\hybrid_0$, for the public parameter $\pp$, the matrix $\mat{A}$ is generated from algorithm $\trapgen(q, n, m)$ along with its trapdoor $\mat{T}_{\mat{A}}$, and the matrix $\mat{B}$ is sampled uniformly randomly from $\Z_q^{n \times m}$. In hybrid $\hybrid_1$, the matrix $\mat{A}$ is sampled uniformly random from $\Z_q^{n \times m}$, and matrix $\mat{B} = \mat{A} \mat{R}^* - \mat{E}_{\vec{w}_0}$, where $\mat{R}^*$ is sampled randomly from $\{-1, 1\}^{m \times m}$.
+ 
+ \item In hybrid $\hybrid_0$, for the challenge ciphertext $\ct^* = (\vec{c}_0^*, \vec{c}_1^*, c_2^*)$, the $(\vec{c}_0^*, c_2^*)$ are computed the same between hybrid $\hybrid_0$ and $\hybrid_1$. In hybrid $\hybrid_0$, $\vec{c}_1^*$ is computed as
+ $$\vec{c}_1^* = \vec{s}^\T (\mat{B} + \mat{E}_{\vec{w}_0}) + \vec{e}_0^\T \mat{R}$$
+ where $\mat{R}$ is sampled randomly from $\{-1, 1\}^{m \times m }$, while in hybrid $\hybrid_1$, $\vec{c}_1^*$ is computed as
+ $$\vec{c}_1^* = \vec{s}^\T (\mat{A} \mat{R}^* - \mat{E}_{\vec{w}_0} + \mat{E}_{\vec{w}_0}) + \vec{e}^\T_0 \mat{R}^* = (\vec{s}^\T \mat{A} + \vec{e}_0^\T) \mat{R}^*$$
+ where $\mat{R}^*$ is the same matrix used to compute $\mat{B}$ in public parameters.
+\end{itemize}
+Thus, it remains to show that the distribution $(\mat{A}, \mat{B}, \vec{c}_1^*)$ in hybrid $\hybrid_0$ and $\hybrid_1$ are statistically indistinguishable. By the property of algorithm $\trapgen$ stated in Lemma~\ref{lem:trapgen}, we know that matrix $\mat{A}$ is generated from the same distribution in these two hybrids. By Lemma~\ref{lem:lhl}, we have the following two distributions are statistically indistinguishable
+$$
+(\mat{A}, \mat{B}, \vec{e}_0^\T \mat{R}^*) \approx (\mat{A}, \mat{A} \mat{R}^*, \vec{e}_0^\T \mat{R}^*)
+$$
+Since $(\mat{A}, \mat{A} \mat{R}^*, \vec{e}_0^\T \mat{R}^*)$ is identically distributed as $(\mat{A}, \mat{A} \mat{R}^* - \mat{E}_{\vec{w}_0}, \vec{e}_0^\T \mat{R}^*)$, we have
+$$
+(\mat{A}, \mat{B}, \vec{e}_0^\T \mat{R}^*) \approx (\mat{A}, \mat{A} \mat{R}^* - \mat{E}_{\vec{w}_0}, \vec{e}_0^\T \mat{R}^*)
+$$
+Then we also have that distribution $(\mat{B} + \mat{E}_{\vec{w}_0})$ is statistically close to $\mat{A} \mat{R}^*$. By adding these two distribution to the third component, we have
+$$
+(\mat{A}, \mat{B}, \vec{s}^\T (\mat{B} + \mat{E}_{\vec{w}_0}) + \vec{e}_0^\T \mat{R}) \approx (\mat{A}, \mat{A} \mat{R}^*, (\vec{s}^\T \mat{A} + \vec{e}_0^\T) \mat{R}^*)
+$$
+where $\vec{s}$ is sampled randomly from $\Z_q^n$. Combing the above three equations, we prove the following two distributions are statistically close
+$$(\mat{A}, \mat{B}, \vec{s}^\T (\mat{B} + \mat{E}_{\vec{w}_0}) + \vec{e}_0^\T \mat{R}) \approx (\mat{A}, \mat{A} \mat{R}^* - \mat{E}_{\vec{w}_0}, (\vec{s}^\T \mat{A} + \vec{e}_0^\T) \mat{R}^* )$$ 
+which completes the indistinguishability proof.
+\end{proof}
+
+\begin{proof}[proof of Lemma~\ref{lem:hybrid1}]
+Similarly as previous proof, we only need to show adversary $\A$'s view is statistically indistinguishable between hybrid $\hybrid_1$ and $\hybrid_2$, assuming the hardness of LWE assumption. The same argument can be applied to the other case. 
+
+Suppose there exists an adversary $\A$ who has non-negligible advantage in distinguishing between hybrid $\hybrid_1$ and $\hybrid_2$, then we can construction a reduction $\B$ that breaks the LWE ssumption using adversary $\A$. Recall in Definition~\ref{defn:lwe}, an LWE instance is provided as a sampling oracle $\O$ that can be either uniformly random oracle $\O_{\$}$ or a pseudorandom oracle $\O_{\vec{s}}$ for some secret random $\vec{s} \overset{\$}{\leftarrow} \Z_q^{n}$. Reduction $\B$ uses adversary $\A$ to distinguish the two oracles as follows:
+\begin{itemize}[leftmargin=*]
+ \item\textbf{Invocation.} Reduction $\B$ requests $(m + 1)$ instances from LWE oracle $\O$, i.e. pair $\{(\vec{a}_i, b_i)\}_{i = 1}^{m + 1}$.
+ \item\textbf{Setup.} Reduction $\B$ runs algorithm $\si.\setup$ with $\vec{w}^* = \vec{w}_0$. Let matrix $\mat{A} \in \Z_q^{n \times m}$ to be the first $m$ vectors $\vec{a}_i$ in pairs $\{(\vec{a}_i, b_i)\}_{i = 1}^m$, and vector $\vec{u}$ to be $\vec{a}_{m + 1}$ in the $(m + 1)$-th pair.
+ 
+ \item\textbf{Secret key queries.} Reduction $\B$ answers secret key queries by running algorithm $\si.\keygen$.
+ \item\textbf{Challenge ciphertext.} When adversary $\A$ sends message $(\mu_0^*, \mu_1^*)$, reduction $\B$ does the following:
+ \begin{enumerate}[leftmargin=*]
+  \item Set $\vec{b}$ to be the first $m$ integers $\{b_i\}_{i = 1}^m$.
+  \item Set challenge ciphertext $\ct^* = (\vec{c}_0^*, \vec{c}_1^*, c_2^*)$ as
+  $$\vec{c}^*_0 = \vec{b}, \quad \vec{c}^*_1 = \vec{b}^\T \mat{R}^*, \quad c^*_2 = b_{m + 1} + \lceil q / 2\rceil\mu_{b^*}$$
+  where matrix $\mat{R}^*$ is used to set matrix $\mat{B}$ in $\pp$ as shown above.
+  \item Send challenge ciphertext $\ct^*$ to adversary $\A$.
+ \end{enumerate}
+ \item\textbf{Guess.} After being allowed to make additional queries with restriction, $\A$ guesses if it is interacting with a hybrid $\hybrid_1$ or $\hybrid_2$ challenger. Reduction $\B$ outputs the final guess as the answer to the LWE challenge it is trying to solve.
+\end{itemize}
+We note that if $\B$ is interacting with real LWE oracle $\O$, then by unfolding the term $\vec{c}_1^*$, we have
+$$\vec{c}_1^* = \vec{b}^\T \mat{R}^* = (\vec{s}^\T \mat{A} + \vec{e}^\T) \mat{R}^*$$
+Then $\A$'s view is identically distributed as in hybrid $\hybrid_1$. However, if $\B$ is interacting with a random oracle $\O_{\$}$, then $\A$'s view is identically distributed as in hybrid $\hybrid_2$. Therefore, we conclude that any efficient adversary that can distinguish hybrid $\hybrid_1$ or $\hybrid_2$ can solve the LWE problem.
+\end{proof}
+
+\begin{proof}[proof of Lemma~\ref{lem:hybrid2}]
+We note that the only place where $\vec{w}^*$ appears in the two hybrids is in the public parameter $\mat{B} = \mat{A} \mat{R}^* - \mat{E}_{\vec{w}^*}$. By Lemma~\ref{lem:lhl}, we have distribution $(\mat{A}, \mat{A}\mat{R}^*)$ is statistically close to $(\mat{A}, \mat{D})$, where $\mat{D}$ is sampled uniformly random from $\Z_q^{n \times m}$. Since for any fixed value of $\mat{E}$ and uniformly random $\mat{D}$, the variable $\mat{D} - \mat{E}$ is also uniformly random, it follows that the distributions of $\mat{B}$ in these two hybrids are statistically close.
+\end{proof}

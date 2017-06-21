@@ -1,0 +1,99 @@
+\section{Introduction}
+Encryption has traditionally been regarded as a way to ensure confidentiality of an end-to-end communication. However, with the emergence of complex networks and cloud computing, recently the cryptographic community has been rethinking the notion of encryption to address security concerns that arise in these more complex environments. \emph{Functional encryption}~\cite{TCC:BonSahWat11,cryptoeprint:2010:556}, generalized from identity based encryption~\cite{C:Shamir84,C:BonFra01} and attribute based encryption~\cite{CCS:GPSW06,SP:BetSahWat07}, provides a satisfying solutions to this problem in theory. Two important features provided by functional encryption are fine grained access and computing on encrypted data. The fine grained access part is formalized as a cryptographic notion, named \emph{predicate encryption}~\cite{TCC:BonWat07,EC:KatSahWat08}. In predicate encryption system, each ciphertext $\ct$ is associated with an attribute $a$ and each secret key $\sk$ is associated with a predicate $f$. A user holding the key $\sk$ can decrypt ciphertext $\ct$ if and only if $f(a) = 0$. Moreover, the attribute $a$ is kept hidden.
+
+With several significant improvements on quantum computing, the community is working intensively on developing applications whose security holds even against quantum attacks. Lattice-based cryptography, the most promising candidate against quantum attacks, has matured significantly since the early works of Ajtai~\cite{STOC:Ajtai96} and Regev~\cite{STOC:Regev05}. Most cryptographic primitives, ranging from basic public-key encryption (PKE)~\cite{STOC:Regev05} to more advanced schemes e.g., identity-based encryption (IBE)~\cite{EC:CHKP10,EC:AgrBonBoy10}, attribute-based encryption (ABE)~\cite{STOC:GorVaiWee13,EC:BGGHNS14}, predicate encryption~\cite{AC:AgrFreVai11,C:GorVaiWee15}, fully-homomorphic encryption (FHE)~\cite{STOC:Gentry09,FOCS:BraVai11,C:GenSahWat13}, etc., can be built from now canonical lattice hardness assumptions, such as Regev's Learning with Errors (LWE). From the above facts, we can draw the conclusion that our understanding about instantiating different cryptographic primitives based on lattices is quite well. However, for improving the efficiency of existent lattice-based construction, e.g. reducing the size of public parameters and ciphertexts, or simplifying the decryption algorithm, our understanding is limited. Besides the theoretical interests in shrinking the size of ciphertext, as the main motivation of studying functional encryption comes from its potential deployment in complex networks and cloud computing, thus the size of transmitted data is a bottleneck of current lattice-based constructions. Recently, there are several works~\cite{EC:Yamada16,EPRINT:ApoFanLiu16a,AC:KatYam16} about reducing the size of public parameters and ciphertexts in adaptively secure IBE setting. Combining all these, this brings us to the following open question:
+\begin{center}
+ \emph{Can we optimize the size of public parameters and ciphertexts of other functional encryption scheme beyond identity based encryption?}
+\end{center}
+
+\subsection{Our Contributions}
+We positively answer the above question by proposing the first lattice-based compact inner product encryption (IPE). Rough speaking, in an IPE scheme, the secret key $\sk$ is associated with a predicate vector $\vec{v} \in \Z_q^t$ and the ciphertext is associated with an attribute vector $\vec{w} \in \Z_q^t$. The decryption works if and only if the inner product $\langle \vec{v}, \vec{w} \rangle = 0$. Despite this apparently restrictive structure, inner product predicates can support conjunction, subset and range queries on encrypted data~\cite{TCC:BonWat07}, as well as disjunctions, polynomial evaluation, and CNF and DNF formulas~\cite{EC:KatSahWat08}. Our construction can be summarized in the following informal theorem:
+\begin{theorem}[Main]
+Under the standard Learning with Errors assumption, there is an IPE scheme with weak attribute-hiding property supporting predicate/attribute vector of length $t = \log n$, where (1) the modulus $q$ is a prime of size polynomial in the security parameter $n$, (2) ciphertexts consist of a vector in $\Z_q^{2m + 1}$, $m$ is the lattice column dimension, and (3) the public parameters consists two matrices in $\Z_q^{n \times m}$ and a vector in $\Z_q^n$.
+\end{theorem}
+
+\begin{remark}\label{rem:sec}
+\emph{
+Our technique only allows us to prove a weak form of anonymity (``attribute hiding''). Specifically, given a ciphertext $\ct$ and a number of keys that do not decrypt $\ct$, the user cannot determine the attribute associated with $\ct$. In the strong form of attribute hiding, the user cannot determine the attribute associated with $\ct$ even when given keys that do decrypt $\ct$. The weakened form of attribute hiding we do achieve is nonetheless more that is required for $\ABE$ and should be sufficient for many applications of $\PE$. See Section $\textbf{2}$ for more detail.
+}
+\end{remark}
+
+We can also extend our compact IPE construction to support $t = \poly(n)$ vectors. Let $t' = t / \log n$, our IPE construction supporting $\poly(n)$-length vectors can be stated in the following corollary:
+\begin{cor}\label{cor}
+Under the standard Learning with Errors assumption, there is an IPE scheme with weak attribute-hiding property supporting predicate/attribute vector of length $t = \poly(n)$, where (1) the modulus $q$ is a prime of size polynomial in the security parameter $n$, (2) ciphertexts consist of a vector in $\Z_q^{t'm + 1}$, and (3) the public parameters consists $(t' + 1)$ matrices in $\Z_q^{n \times m}$ and a vector in $\Z_q^n$.
+\end{cor}
+In addition to reducing the size of public parameters and ciphertexts, our decryption algorithm is computed in an Single-Instruction-Multiple-Data (SIMD) manner. In prior works~\cite{AC:AgrFreVai11,PKC:Xagawa13}, the decryption computes the inner product between the predicate vector and ciphertext by (1) decomposing the predicate vector, (2) multiplying-then-adding the corresponding vector bit and ciphertext, entry-by-entry. Our efficient decryption algorithm achieves the inner product by just one vector-matrix multiplication.
+
+\subsection{Our Techniques}
+Our high-level approach to compact inner product encryption from LWE begins by revisiting the first lattice-based IPE construction~\cite{AC:AgrFreVai11} and the novel fully homomorphic encryption proposed recently by Gentry, Sahai and Waters~\cite{C:GenSahWat13}.
+
+\paragraph{The Agrawal-Freeman-Vaikuntanathan IPE.}We first review the construction of IPE in~\cite{AC:AgrFreVai11}. Their construction relies on the algebraic structure of ABB-IBE~\cite{EC:AgrBonBoy10} to solve ``lattice matching'' problem. Lattice matching means the lattice structure computed in decryption algorithm matches the structure used in key generation, and since the secret key is a \emph{short} trapdoor of the desired lattice, thus the decryption succeeds. To encode a predicate vector $\vec{v} \in \Z_q^t$ according to~\cite{AC:AgrFreVai11}, the key generation first computes the $r$-ary decomposition of each entry of $\vec{v}$ as $v_i = \sum_{j = 0}^k v_{ij} r^j$, and constructs the $\vec{v}$-specific lattice as
+$$[\mat{A} | \mat{A}_{\vec{v}}] = [\mat{A} | \sum_{i = 1}^t \sum_{j = 0}^k v_{ij} \mat{A}_{ij}]$$
+by ``mixing'' a \emph{long} public matrices $(\mat{A}, \{\mat{A}_{ij}\})$. The secret key $\sk_{\vec{v}}$ is a short trapdoor of lattice $\Lambda_q^{\bot}(\mat{A} | \sum_{i = 1}^t \sum_{j = 0}^k v_{ij} \mat{A}_{ij})$. To encode an attribute vector $\vec{w} \in \Z_q^{t}$, for $i \in [t], j \in [k]$, construct the $\vec{w}$-specific vector as
+$$\vec{c}_{ij} = \vec{s}^\T ( \mat{A}_{ij} + r^j w_i \mat{B}) + \mathsf{noise}$$
+for a randomly chosen vector $\vec{s}$ and a public matrix $\mat{B}$. To reduce the noise growth in the inner produce computation, decryption only needs to multiply-then-add the $r$-ary representation of $v_{ij}$ to its corresponding $\vec{c}_{ij}$, as
+$$\sum_{i = 1}^t \sum_{j = 0}^k v_{ij}\vec{r}_{ij} = \vec{s}^\T (\sum_{i = 1}^t \sum_{j = 0}^k v_{ij} \mat{A}_{ij} + \langle\vec{v}, \vec{w}\rangle \mat{B}) + \mathsf{noise}$$
+when $\langle\vec{v}, \vec{w}\rangle = 0$, the $(\langle\vec{v}, \vec{w}\rangle \mat{B})$ part vanishes, thus the lattice computed after inner produce matches the $\mat{A}_{\vec{v}}$ part in the key generation. Then the secret key $\sk_{\vec{v}}$ can be used to decrypt the ciphertext. Thererfore, the number of matrices in public parameters or vectors in ciphertext is quasilinear in the dimension of vectors.
+
+\paragraph{Using GSW-FHE to compute inner product.} Recent progress in fully homomorphic encryption~\cite{C:GenSahWat13} makes us re-think the process of computing inner product. We wonder whether we can use GSW-FHE~\cite{C:GenSahWat13} along with its simplification~\cite{C:AlpPei14} to simplify the computing procedure. Recall ciphertext in GSW-FHE can be view in the form $\ct_x = \mat{A} \mat{R} + x \G$, where $\G$ is the ``gadget matrix'' as first (explicitly) introduced in the work~\cite{EC:MicPei12}. The salient point is that there is an efficiently computable function $\G^{-1}$, so that (1) $\ct_x \cdot \G^{-1}(y \G) = \ct_{xy}$, and (2) each entry in matrix $\G^{-1}(y \G)$ is just 0 or 1, and thus has small norm. These two nice properties can shrink the size of public parameters (ciphertext) from quasilinear to linear. In particular, to encoding a predicate vector $\vec{v} \in \Z_q^t$, we construct the $\vec{v}$-specific lattice as
+$$[\mat{A} | \mat{A}_{\vec{v}}] = [\mat{A} | \sum_{i = 1}^t  \mat{A}_{i} \G^{-1}(v_i \G)]$$
+where the number of public matrices is $t + 1$. To encode an attribute vector $\vec{w} \in \Z_q^{t}$, for $i \in [t]$, construct the $\vec{w}$-specific vector as
+$$\vec{c}_i = \vec{s}^\T ( \mat{A}_i +  w_i \G) + \mathsf{noise}$$
+Then, we can compute the inner product as
+$$\sum_{i = 1}^t \vec{c}_i \cdot \G^{-1}(v_i \G) = \vec{s}^\T (\sum_{i = 1}^t  \mat{A}_{i} \G^{-1}(v_i \G) + \langle \vec{v}, \vec{w} \rangle \G) +  \mathsf{noise}$$
+Since $\G^{-1}(v_i \G)$ is small norm, the decryption succeeds when $\langle \vec{v}, \vec{w} \rangle = 0$.
+
+\paragraph{Achieving public parameters of two matrices.} Our final step is to bring the size of public parameters (or ciphertext) to constant for $(t = \log \secparam)$-length vectors. Inspired by recent work~\cite{EPRINT:ApoFanLiu16a} in optimizing size of public parameters in the IBE setting, we use their vector encoding method to further optimize our IPE construction. The vector encoding for encoding $\vec{v} \in \Z_q^t$ is
+$$\mat{E}_{\vec{v}} = \big[v_1 \mat{I}_n | \cdots | v_t \mat{I}_n \big] \cdot
+\G_{tn, \ell, m}$$
+where $\G_{tn, \ell, m} \in \Z_q^{tn \times m}$ is the extended gadget matrix introduced in~\cite{EC:MicPei12,EPRINT:ApoFanLiu16a}. Then the $\vec{v}$-specific lattice becomes
+$$\mat{A}_{\vec{v}} = \mat{A}_1 \cdot \G_{dn, \ell, m}^{-1}
+ \Bigg(\begin{bmatrix}
+v_{1}\mat{I}_n \\
+\vdots \\
+v_{d}\mat{I}_n
+\end{bmatrix} \cdot \G_{n, 2, m}\Bigg) $$
+and the $\vec{w}$-specific ciphertext becomes
+$$\vec{c} = \vec{s}^\T ( \mat{A}_1 +  \mat{E}_{\vec{w}}) + \mathsf{noise}$$
+The inner product can be computed in an SIMD way, as
+$$ \vec{c} \cdot \G_{dn, \ell, m}^{-1}
+ \Bigg(\begin{bmatrix}
+v_{1}\mat{I}_n \\
+\vdots \\
+v_{d}\mat{I}_n
+\end{bmatrix} \cdot \G_{n, 2, m}\Bigg) \approx \vec{s}^\T (\mat{A}_1\cdot \G_{dn, \ell, m}^{-1}
+ \Bigg(\begin{bmatrix}
+v_{1}\mat{I}_n \\
+\vdots \\
+v_{d}\mat{I}_n
+\end{bmatrix} \G_{n, 2, m}\Bigg) +  \langle \vec{v}, \vec{w} \rangle \G_{n, 2, m})$$
+As such, our final IPE system contains only two matrices $(\mat{A}, \mat{A}_1)$ (and a vector $\vec{u}$), and the ciphertext consists of two vectors. By carefully twisting the vector encoding and proof techniques shown in~\cite{AC:AgrFreVai11}, we show our IPE construction satisfies weakly attribute-hiding. Our IPE system can also be extended in a ``parallel repetition'' manner to support $(t = \secparam)$-length vectors, as Corollary~\ref{cor} states.
+
+
+\subsection{Related Work}
+In this section, we provide a comparison with the first IPE construction~\cite{AC:AgrFreVai11} and its follow-up improvement~\cite{PKC:Xagawa13}. In~\cite{PKC:Xagawa13}, Xagawa used the ``Full-Rank Difference encoding'', proposed in~\cite{EC:AgrBonBoy10} to map the vector $\Z_q^t$ to a matrix in $\Z_q^{n \times n}$. The size of public parameters (or ciphertext) in his scheme depends linearly on the length of predicate/attribute vectors, and the ``Full-Rank Difference encoding'' incurs more computation overhead than embedding GSW-FHE structure in IPE construction as described above. The detailed comparison is provided in Table~\ref{tab} for length parameter $t = \log \secparam$.
+
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{table}[H]\label{tab}
+\setlength\extrarowheight{2pt}
+\setlength\tabcolsep{3pt}
+\caption{Comparison of Lattice-based IPE Scheme} \label{tab:comparison}
+ \begin{threeparttable}
+\begin{tabularx}{\textwidth}{@{} l *{5}{C} @{}}
+\hline
+ Schemes
+& \# of $\Z_q^{n \times m}$ mat. in $|\pp|$
+&  \# of $\Z_q^m$ vec. in $|\ct|$
+& LWE param $1 / \alpha$ \\ \hline
+\cite{AC:AgrFreVai11} & $O(\secparam \log \secparam)$ & $O(\secparam \log \secparam)$ & $O(\secparam^{3.5})$ \\ \hline
+\cite{PKC:Xagawa13} & $O(\secparam)$ & $O(\secparam)$ & $O(\secparam^4)$ \\ \hline
+Ours  & 2 & 2 & $O(\secparam^{4} \log \secparam)$ \\ \hline
+\end{tabularx}
+
+ \end{threeparttable}
+\end{table}
+
+
+
+
+
