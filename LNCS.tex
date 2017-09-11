@@ -1,0 +1,233 @@
+\documentclass{llncs}
+\usepackage{url}
+\usepackage{amssymb,amsmath,amsfonts,ntheorem}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{chemarrow,extarrows}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{framed}
+\usepackage{xcolor,xspace}
+
+\usepackage{float,subfigure}
+\usepackage{etoolbox}
+\usepackage{tabularx}
+\usepackage[referable]{threeparttablex}
+\input{lattice}
+\input{crypto}
+\patchcmd{\paragraph}{\itshape}{\bfseries\boldmath}{}{}
+
+
+\newtheorem*{thm*}{Theorem}
+\renewtheorem{theorem}{Theorem}[section]
+\numberwithin{theorem}{section}
+\renewtheorem{definition}[theorem]{Definition}%%
+\renewtheorem{remark}[theorem]{Remark}
+\renewtheorem{lemma}[theorem]{Lemma}
+\renewtheorem{claim}[theorem]{Claim}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{asmp}[theorem]{Assumption}
+\renewtheorem{proposition}[theorem]{Proposition}
+\newtheorem{fact}[theorem]{Fact}
+\pagestyle{plain}
+\let\doendproof\endproof
+\renewcommand\endproof{~\hfill$\qed$\doendproof}
+
+\newcommand{\leo}[1]{{\color{cyan}[Leo: #1]}}
+\newcommand{\todo}[1]{{\color{red}[TO-DO: #1]}}
+\newcommand{\wang}[1]{{\color{red}[Wang: #1]}}
+\newcommand{\sampled}{\mathsf{SampleD}}
+\newcommand{\encode}{\mathsf{encode}}
+\renewcommand{\T}{\mathsf{T}}
+\begin{document}
+\title{Compact Inner Product Encryption from LWE}%\\
+
+\author{â€¢}
+\institute{}
+
+
+\maketitle
+
+\begin{abstract}
+Predicate encryption provides fine-grained access control and has attractive applications. In this paper, We construct an compact inner product encryption scheme from the standard Learning with Errors (LWE) assumption that has compact public-key and achieves weakly attribute-hiding in the standard model. In particular, our scheme only needs two public matrices to support inner product over vector space $\Z_q^{\log \secparam}$, and $(\secparam / \log \secparam)$ public matrices to support vector space $\Z_q^{\secparam}$.
+
+Our construction is the first compact functional encryption scheme based on lattice that goes beyond the very recent optimizations of public parameters in identity-based encryption setting. The main technique in our compact IPE scheme is a novel combination of IPE scheme of Agrawal, Freeman and Vaikuntanathan (Asiacrypt 2011), fully homomorphic encryption of Gentry, Sahai and Waters (Crypto 2013) and compact IBE scheme of Apon, Fan and Liu (Eprint 2016).
+\end{abstract}
+
+
+
+\input{intro}
+\input{prelim}
+
+
+
+
+\input{scheme}
+\input{conclu}
+
+
+
+\bibliographystyle{plain}
+\bibliography{abbrev3,crypto_crossref,extra,park,BCHK,BBL,ARW}
+
+\begin{appendix}
+\section{Lattice Background}
+A full-rank $m$-dimensional integer lattice $\Lambda\subset\Z^m$ is a discrete additive subgroup whose linear span is $\R^m$. The basis of $\Lambda$ is a linearly independent set of vectors whose integer linear combinations are exactly $\Lambda$. Every integer lattice is generated as the $\Z$-linear combination of linearly independent vectors $\mat{B}=\{\vec{b}_1,...,\vec{b}_m\}\subset\Z^m$. For a matrix $\mat{A}\in\Z^{n\times m}_q$, we define the ``$q$-ary'' integer lattices:
+$$\Lambda_q^{\bot}=\{\vec{e} \in \Z^m| \mat{A} \vec{e} = \vec{0} \bmod q\},\qquad  \Lambda_q^{\mat{u}}=\{\vec{e}\in\Z^m|\mat{A}\vec{e} = \vec{u} \bmod q\}$$
+It is obvious that $\Lambda_q^{\vec{u}}$ is a coset of $\Lambda_q^{\bot}$.
+
+Let $\Lambda$ be a discrete subset of $\Z^m$. For any vector $\vec{c}\in\R^m$, and any positive parameter $\sigma\in\R$, let $\rho_{\sigma, \vec{c}}(\vec{x})=\exp(-\pi||\vec{x}-\vec{c}||^2 / \sigma^2)$ be the Gaussian function on $\R^m$ with center $\vec{c}$ and parameter $\sigma$. Next, we let $\rho_{\sigma, \vec{c}}(\Lambda)=\sum_{\vec{x}\in\Lambda}\rho_{\sigma, \vec{c}}(\vec{x})$ be the discrete integral of $\rho_{\sigma, \vec{x}}$ over $\Lambda,$ and let $\D_{\Lambda, \sigma, \vec{c}}(\vec{y}):=\frac{\rho_{\sigma, \vec{c}}(\vec{y})}{\rho_{\sigma, \vec{c}}(\Lambda)}$. We abbreviate this as $\D_{\Lambda, \sigma}$ when $\vec{c}=\vec{0}.$
+
+Let $S^m$ denote the set of vectors in $\R^{m}$ whose length is 1. Then the norm of a matrix $\mat{R} \in \R^{m \times m}$ is defined to be $\mathsf{sup}_{\vec{x} \in S^m} ||\mat{R} \vec{x}||$. Then we have the following lemma, which bounds the norm for some specified distributions.
+
+\begin{lemma}[\cite{{EC:AgrBonBoy10}}]\label{lem:bound}
+With respect to the norm defined above, we have the following bounds:
+\begin{itemize}
+ \item Let $\mat{R} \in \{-1, 1\}^{m \times m}$ be chosen at random, then we have $\prob[||\mat{R}|| > 12 \sqrt{2m}] < e^{-2m}$.
+ \item Let $\mat{R}$ be sampled from $\D_{\Z^{m \times m}, \sigma}$, then we have $\prob [||\mat{R}|| > \sigma \sqrt{m}] < e^{-2m}$.
+\end{itemize}
+\end{lemma}
+
+
+\paragraph{Randomness Extraction.} We will use the following lemma to argue the indistinghishability of two different distributions, which is a generalization of the leftover hash lemma proposed by Dodis et al. \cite{EC:DodReySmi04}.
+
+\begin{lemma}[\cite{EC:AgrBonBoy10}] \label{lem:lhl}
+Suppose that $m > (n + 1) \log q + \omega(\log n)$. Let $\mat{R} \in \{-1, 1\}^{m \times k}$ be chosen uniformly at random for some polynomial $k = k(n)$. Let $\mat{A}, \mat{B}$ be matrix chosen randomly from $\Z^{n \times m}_q, \Z^{n \times k}_q$ respectively. Then, for all vectors $\vec{w} \in \Z^m$, the two following distributions are statistically close:
+$$(\mat{A}, \mat{A} \mat{R}, \mat{R}^\T \vec{w}) \approx (\mat{A}, \mat{B}, \mat{R}^\T \vec{w})$$
+\end{lemma}
+
+\paragraph{Learning With Errors.} The LWE problem was introduced by Regev~\cite{STOC:Regev05}, the works of~\cite{STOC:Regev05,STOC:Peikert09,STOC:BLPRS13} show that the LWE assumption is as hard as (quantum)
+solving GapSVP and SIVP under various parameter regimes.
+\begin{definition}[LWE]\label{defn:lwe}
+For an integer $q = q(n) \geq 2$, and an error distribution $\chi = \chi(n)$ over $\Z_q$, the \emph{Learning With Errors problem $\LWE_{n, m, q, \chi}$} is to distinguish between the following pairs of distributions (e.g. as given by a sampling oracle $\mathcal{O}\in\{\mathcal{O}_{\vec{s}}, \mathcal{O}_{\$}\}$):
+$$\{\mat{A}, \vec{s}^\T \mat{A} + \vec{x}\} \  \text{and} \ \{\mat{A}, \vec{u}\}$$
+where $\mat{A} \overset{\$}{\leftarrow}\Z^{n \times m}_q$, $\vec{s} \overset{\$}{\leftarrow} \Z^n_q$, $\vec{u} \overset{\$}{\leftarrow} \Z^m_q$, and $\vec{x} \overset{\$}{\leftarrow} \chi^m$.
+\end{definition}
+
+
+\paragraph{Two-Sided Trapdoors and Sampling Algorithms.}
+
+We will use the following algorithms to sample short vectors from specified lattices.
+
+\begin{lemma}[\cite{STOC:GenPeiVai08,Alwen2010}] \label{lem:trapgen}
+Let $q, n, m$ be positive integers with $q\geq 2$ and sufficiently large $m = \Omega(n \log q)$. There exists a $\ppt$ algorithm $\trapgen(q, n, m)$ that with overwhelming probability outputs a pair $(\mat{A}\in\Z_q^{n\times m}, \mat{T}_\mat{A} \in\Z^{m\times m})$ such that $\mat{A}$ is statistically close to uniform in $\Z_q^{n\times m}$ and $\mat{T}_\mat{A}$ is a basis for $\Lambda_q^{\bot}(\mat{A})$ satisfying
+$$||\mat{T}_\mat{A}||\leq O(n\log q)\quad\mbox{and}\quad||\widetilde{\mat{T}_{\mat{A}}}||\leq O(\sqrt{n\log q})$$
+except with $\mathsf{negl}(n)$ probability.
+\end{lemma}
+
+\begin{lemma}[\cite{STOC:GenPeiVai08,EC:CHKP10,EC:AgrBonBoy10}] \label{lem:samp}
+Let $q>2, m>n.$ There are two sampling algorithms as follows:
+\begin{itemize}[leftmargin=*]
+ \item There is a \ppt\ algorithm $\sampleleft(\mat{A}, \mat{B}, \mat{T}_{\mat{A}}, \vec{u}, s)$, taking as input: (1) a rank-$n$ matrix $\mat{A}\in\Z_q^{n\times m},$ and any matrix $\mat{B}\in\Z_q^{n\times m_1}$, (2) a ``short'' basis $\mat{T}_{\mat{A}}$ for lattice $\Lambda_q^{\bot}(\mat{A})$, a vector $\vec{u}\in\Z_q^n$, (3) a Gaussian parameter $s > ||\widetilde{\mat{T}_{\mat{A}}}||\cdot\omega(\sqrt{\log(m+m_1)})$. Then outputs a vector $\vec r\in\Z^{m+m_1}$ distributed statistically close to $\D_{\Lambda_q^{\vec{u}}(\mat{F}), s}$ where $\mat{F}:=[\mat{A}|\mat{B}]$.
+
+ \item There is a \ppt\ algorithm $\sampleright(\mat{A}, \mat{B}, \mat{R}, \mat{T}_{\mat{B}}, \vec{u}, s)$, taking as input: (1) a matrix $\mat{A}\in\Z_q^{n \times m},$ and a rank-$n$ matrix $\mat{B}\in\Z_q^{n\times m}$, a matrix $\mat{R}\in\Z_q^{m \times m},$ where $s_{\mat R} := ||\mat{R}|| = \sup_{\vec{x} : ||\vec{x}||=1}||\mat{R}\vec{x}||$, (2) a ``short'' basis $\mat{T}_{\mat{B}}$ for lattice $\Lambda_q^{\bot}(\mat{B}),$ a vector $\vec{u}\in\Z_q^n$, (3) a Gaussian parameter $s > ||\widetilde{\mat{T}_{\mat{B}}}||\cdot{s_{\mat R}}\cdot\omega(\sqrt{\log{m}})$. Then outputs a vector $\vec{r}\in\Z^{2m}$ distributed statistically close to $\D_{\Lambda_q^{\vec{u}}(\mat{F}), s}$ where $\mat{F}:=(\mat{A}|\mat{A}\mat{R} + \mat{B}).$
+
+\end{itemize}
+\end{lemma}
+
+\section{Security Proof}
+\subsection{Security Proof of Our Main Scheme}
+In this part, we show the weakly attribute-hiding property of our IPE construction. We adapt the simulation technique in~\cite{AC:AgrFreVai11} by plugin the encoding of vectors. Intuitively, to prove the theorem we define a sequences of hybrids against adversary $\mathcal{A}$ in the weak attribute-hiding experiment. The adversary $\A$ outputs two attribute vectors $\vec{w}_{0}$ and $\vec{w}_{1}$ at the beginning of each game, and at some point outputs two messages $\mu_{0},\mu_{1}$. The first and last games correspond to real security game with challenge ciphertexts $\enc(\pp,\vec{w}_{0},\mu_{0})$ and $\enc(\pp,\vec{w}_{1},\mu_{1})$ respectively. In the intermediate games we use the ``alternative'' simulation algorithms $(\si.\setup,\si.\keygen, \si.\enc)$. During the course of the game the adversary can only request keys for predicate vector $\vec{v}_i$ such that $\langle \vec{v}_i, \vec{w}_{0} \rangle \neq 0$ and $\langle \vec{v}_i, \vec{w}_{1} \rangle \neq 0$.
+
+We first define the simulation algorithms $(\si.\setup,\si.\keygen, \si.\enc)$ in the following:
+\begin{itemize}[leftmargin=*]
+ \item $\si.\setup(1^\secparam, 1^d, \vec{w}^*)$: On input the security parameter $\lambda$, the length parameter $d$, and an attribute vector $\vec{w}^{*} \in \Z^{d}_{q}$, the simulation setup algorithm first chooses a random matrix $\mat{A} \leftarrow \Z_q^{n \times m}$ and a random vector $\vec{u} \leftarrow \Z_q^n$. Then set matrix
+ $$\mat{B} = \mat{A} \mat{R}^* - \mat{E}_{\vec{w}^*}, \quad \mat{E}_{\vec{w}^*} = \big[w^*_1 \mat{I}_n | \cdots | w^*_d \mat{I}_n \big] \cdot
+\G_{dn, \ell, m}$$
+where matrix $\mat{R}^*$ is chosen randomly from $\{-1, 1\}^{m \times m}$. Output $\pp = (\mat{A}, \mat{B}, \vec{u})$ and $\msk = \mat{R}^*$.
+
+ \item $\si.\keygen(\msk, \vec{v})$: On input the master secret key $\msk$ and a vector $\vec{v} \in \Z_q^d$, the simulation key generation algorithm sets matrix $\mat{R}_{\vec{v}}$ and  $\mat{B}_{\vec{v}}$ as
+ $$\mat{R}_{\vec{v}} =
+ \Bigg(\begin{bmatrix}
+v_{1}\mat{I}_n \\
+\vdots \\
+v_{d}\mat{I}_n
+\end{bmatrix} \cdot \G_{n, 2, m}\Bigg), \quad \mat{B}_{\vec{v}} = \mat{B} \cdot \G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}})$$
+By further unfolding $\mat{B}_{\vec{v}}$, we have
+\begin{align*}
+\mat{B}_{\vec{v}} & = \mat{A} \mat{R}^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}}) -  \mat{E}_{\vec{w}^*} \cdot \G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}}) \\
+ & = \mat{A} \mat{R}^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}}) - \langle \vec{v}, \vec{w}^* \rangle \cdot \G_{n, 2, m}
+\end{align*}
+Then sample a low-norm vector $\vec{r}_{\vec{v}} \in \Z^{2m}$ using algorithm
+$$\vec{r}_{\vec{v}} \leftarrow \sampleright(\mat{A}, \langle \vec{v}, \vec{w}^* \rangle\G_{n, 2, m}, \mat{R}^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}}), \mat{T}_{\G_{n, 2, m}}  \vec{u}, s)$$
+such that $[\mat{A} | \mat{B}_{\vec{v}}] \cdot \vec{r}_{\vec{v}} = \vec{u} \bmod q$. Output secret key $\sk_{\vec{v}} = \vec{r}_{\vec{v}}$.
+
+ \item $\si.\enc(\pp, \vec{w}^*, \mu)$: The simulation encryption algorithm is the same as the counterpart in the scheme, except the matrix $\mat{R}^*$ is used in generating the ciphertext instead of sampling a random matrix $\mat{R} \in \{-1, 1\}^{m \times m}$.
+\end{itemize}
+
+\begin{theorem}\label{thm:sec}
+Assuming the hardness of $(n, q, \chi)$-LWE assumption, the IPE scheme described above is weakly attribute-hiding (c.f. Definition~\ref{defn:sec}).
+\end{theorem}
+\begin{proof}
+The sequence of hybrids are described as follows:
+\begin{itemize}[leftmargin=*]
+ \item\textbf{Hybrid} $\hybrid_0$: The challenger runs $\setup$, answers $\A$'s secret key queries using $\keygen$, and generates the challenge ciphertext $\ct^*$ using $\enc$ with attribute $\vec{w}_{0}$ and message $\mu_{0}$.
+ \item\textbf{Hybrid} $\hybrid_1$: The challenger runs $\si.\setup$ with $\vec{w}^{*}=\vec{w}_{0}$, and answers $\A$'s secret key queries using $\si.\keygen$. The challenger generates the challenge ciphertext $\ct^*$ using $\si.\enc$ with attribute  $\vec{w}_{0}$ and message $\mu_{0}$.
+ \item\textbf{Hybrid} $\hybrid_2$: The challenger runs $\si.\setup$ with $\vec{w}^{*}=\vec{w}_{0}$, and answers $\A$'s secret key queries using $\si.\keygen$. The challenger generates the challenge ciphertext $\ct^*$ by choosing a uniformly random element of the ciphertext space.
+ \item\textbf{Hybrid} $\hybrid_3$: The challenger runs $\si.\setup$ with $\vec{w}^{*}=\vec{w}_{1}$, and answers $\A$'s secret key queries using $\si.\keygen$. The challenger generates the challenge ciphertext $\ct^*$ by choosing a uniformly random element of the ciphertext space.
+ \item\textbf{Hybrid} $\hybrid_4$: The challenger runs $\si.\setup$ with $\vec{w}^{*}=\vec{w}_{1}$, and answers $\A$'s secret key queries using $\si.\keygen$. The challenger generates the challenge ciphertext $\ct^*$ using $\si.\enc$ with attribute  $\vec{w}_{1}$ and message $\mu_{1}$.
+ \item\textbf{Hybrid} $\hybrid_5$: The challenger runs $\setup$, answers $\A$'s secret key queries using $\keygen$, and generates the challenge ciphertext $\ct^*$ using $\enc$ with attribute $\vec{w}_{1}$ and message $\mu_{1}$.
+\end{itemize}
+Regarding the above hybrids, we have the following lemmas.
+
+\begin{lemma}\label{lem:hybrid0}
+The view of adversary $\A$ in hybrid $\hybrid_0$ (or $\hybrid_4$) is statistically close to the view of adversary $\A$ in hybrid $\hybrid_1$ (or $\hybrid_5$).
+\end{lemma}
+
+
+\begin{lemma}\label{lem:hybrid1}
+Assuming the hardness of $(n, q, \chi)$-LWE assumption, the view of adversary $\A$ in hybrid $\hybrid_1$ (or $\hybrid_3$) is computationally close to the view of adversary $\A$ in hybrid $\hybrid_2$ (or $\hybrid_4$).
+\end{lemma}
+
+
+\begin{lemma}\label{lem:hybrid2}
+The view of adversary $\A$ in hybrid $\hybrid_2$ is statistically close to the view of adversary $\A$ in hybrid $\hybrid_3$.
+\end{lemma}
+
+The proofs of the above lemmas are analogous to the counterparts in~\cite{AC:AgrFreVai11}. Due to the space limit, we include these proofs in the full version.
+
+\paragraph{Completing the proof.}Suppose that there is an $\ppt$ adversary $\A$ that wins the weakly attribute-hiding experiment. Let $\A^i$ be the output of $\A$ interacting with hybrid $\hybrid_i$, then we have
+$$|\prob[\A^0 = 1] - \prob[\A^5 = 1]| \geq 1 / \poly(\secparam)$$
+By a standard argument, we have for $i = 0,..., 4$
+$$|\prob[\A^i = 1] - \prob[\A^{(i + 1)} = 1]| \geq 1 / \poly(\secparam)$$
+Since $\A$ is polynomial time, the above inequalities contradict the statistical arguments in the proof of Lemma~\ref{lem:hybrid0},~\ref{lem:hybrid2}. By Lemma~\ref{lem:hybrid1}, adversary $\A$ can be used to solve LWE instance, which also contradicts the hardness of LWE assumption.
+
+\end{proof}
+
+\subsection{Security Proof of poly(¦Ë)-length Vectors Version}
+Put simply, to prove the weakly attribute-hiding property (c.f. Definition~\ref{defn:sec}), we describe a sequence of hybrids analogous to those in the proof of Theorem~\ref{thm:sec}, and use similar statistical arguments or LWE assumption to argue the indistinguishability of two consecutive hybrids. However, the algorithm $\si.\keygen$ is different from the prior one, since the $\sampleright$ algorithm only supports sampling from a special form of lattices, and the lattice we use to encode the $\poly$-length predicate vector $\vec{v}$ obviously is not consistent with that. The $\si.\keygen$ algorithm can be described as follows:
+\begin{description}
+ \item $\si.\keygen(\msk, \vec{v})$: On input the master secret key $\msk$ and a predicate vector $\Z_q^t$, the simulation first divides the vector $\vec{v}$ into $d$-coordinate vectors $\vec{v}_i \in \Z_q^d$ as
+ $$\vec{v}_i = (v_{id + 1},..., v_{(i + 1)d}), \forall i \in [t']$$
+ Then for $i \in [t']$, set matrix $\mat{R}_{\vec{v}_i}$ and  $\mat{B}_{\vec{v}_i}$ as
+ $$\mat{R}_{\vec{v}_i} =
+ \Bigg(\begin{bmatrix}
+v_{id + 1}\mat{I}_n \\
+\vdots \\
+v_{(i + 1)d}\mat{I}_n
+\end{bmatrix} \cdot \G_{n, 2, m}\Bigg), \quad \mat{B}_{\vec{v}_i} = \mat{B}_i \cdot \G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}_i})$$
+By plugin $\mat{B}_i = \mat{A} \mat{R}^*_i - \mat{E}_{\vec{w}^*_i}$, where $\vec{w}^* = (\vec{w}_1^*,..., \vec{w}_{t'}^*)$, we have
+\begin{align*}
+\mat{B}_{\vec{v}_i} & = \mat{A} \mat{R}_i^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}_i}) -  \mat{E}_{\vec{w}_i^*} \cdot \G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}_i}) \\
+ & = \mat{A} \mat{R}^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}_i}) - \langle \vec{v}_i, \vec{w}_i^* \rangle \cdot \G_{n, 2, m}
+\end{align*}
+Since $\langle \vec{v}, \vec{w}^* \rangle = \sum_{i  = 1}^{t'} \langle \vec{v}_i, \vec{w}_i^* \rangle \neq 0 \bmod q$, then with overwhelming probability there must exists at least one index $i \in [t']$, such that $\langle \vec{v}_i, \vec{w}_i^* \rangle \neq 0 \bmod q$. Pick the smallest index $k \in [t']$ such that $\langle \vec{v}_k, \vec{w}_k^* \rangle \neq 0 \bmod q$. Next sample $(t' - 1)$ discrete Gaussian vectors $\vec{r}_i \in \D_{\Z^m, s}$, and sample $(\vec{r}_0, \vec{r}_k) \in \Z^{2m}$ using
+$$\sampleright(\mat{A}, \langle \vec{v}_k, \vec{w}_k^* \rangle\G_{n, 2, m}, \mat{R}_k^*\G_{dn, \ell, m}^{-1}(\mat{R}_{\vec{v}_k}), \mat{T}_{\G_{n, 2, m}}  \vec{u} - \sum_{i \neq k} \mat{B}_{\vec{v}_i} \vec{r}_i , s)$$
+Therefore, it holds $[\mat{A} | \mat{B}_{\vec{v}_1} | \cdots | \mat{B}_{\vec{v}_{t'}}] \cdot (\vec{r}_0,..., \vec{r}_{t'}) = \vec{u} \bmod q$. Output the secret key $\sk_{\vec{v}} = \vec{r}_{\vec{v}} = (\vec{r}_0,..., \vec{r}_{t'})$.
+\end{description}
+By the property of algorithm $\sampleright$ stated in Lemma~\ref{lem:samp}, we have that the distribution of secret keys generated using $\si.\keygen$ is statistically close to secret keys generated using algorithm $\sampleleft$ in the scheme, both from distribution $\D_{\Lambda_q^{\vec{u}}(\mat{F}), s}$, where $\mat{F} = [\mat{A} | \mat{B}_{\vec{v}_1} | \cdots | \mat{B}_{\vec{v}_{t'}}]$.
+
+The rest of the proof is similar to the $\log(\secparam)$-length one, thus we omit the details here.
+
+\end{appendix}
+
+
+\end{document}
+
+
+
+
+
+
+

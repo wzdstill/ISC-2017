@@ -23,7 +23,7 @@ We say the IPE scheme described above is correct, if for any $(\msk, \pp) \lefta
  \item \textbf{Query Phase II}: Adversary $\A$ continues to issue secret key queries $(\vec{v}_{m + 1},..., \vec{v}_{n})$ adaptively, subject to the restriction that $\langle \vec{v}_i, \vec{w}_{0} \rangle \neq 0$ and $\langle \vec{v}_i, \vec{w}_{1} \rangle \neq 0$. The challenger responds by sending back keys $\sk_{\vec{v}_i}$ as in Query Phase I.
  \item \textbf{Guess}: Adversary $\A$ outputs a guess $b' \in \bool$.
 \end{itemize}
-We define the advantage of adversary $\A$ in attacking an IPE scheme $\Pi$ as:
+We note that query phase I and II can happen polynomial times in terms of security parameter. The advantage of adversary $\A$ in attacking an IPE scheme $\Pi$ is defined as:
 $$\advantage_{\A}(1^\secparam) = \left|\Pr[b^* = b'] - \frac{1}{2}\right|,$$
 \noindent where the probability is over the randomness of the challenger and adversary.
 
@@ -32,68 +32,8 @@ We say an IPE scheme $\Pi$ is weakly attribute-hiding against chosen-plaintext a
 $$\advantage_{\A}(1^\secparam) \leq \negl(\secparam).$$
 \end{definition}
 
-\begin{remark}\label{rem:sec}
-\emph{
-We note that the experiment described in weakly attribute hiding definition is ``selective'', in the sense that the adversary must commit to its challenge attributes before seeing any secret keys. This selective security notion can be extended to adaptive one naturally by allowing adversary to output its challenge attributes in Challenge phase (or semi-adaptive one by allowing adversary to output its challenge attributes after seeing the public parameter, but before making any secret key queries). There are two more security notions, called {\em payload-hiding} and {\em attribute-hiding}, where payload-hiding requires $\vec{w}_0 = \vec{w}_1$, so any scheme that is weakly attribute hiding is payload hiding. Attribute-hiding requires that in secret key queries, predicate vectors $(\vec{v}_1,..., \vec{v}_n)$ satisfy $\langle \vec{v}_i, \vec{w}_0 \rangle = \langle \vec{v}_i, \vec{w}_1 \rangle$. As discussed in~\cite{cryptoeprint:2016:654}, the IPE construction in~\cite{AC:AgrFreVai11} dose not satisfy the attribute-hiding security. Our constructions described below suffer similar attacks. Therefore, it remains an interesting open problem to achieving attribute-hiding functional encryption from LWE, even for simple functionality such as inner product.
-}
-\end{remark}
-
-
-\subsection{Lattice Background}
-A full-rank $m$-dimensional integer lattice $\Lambda\subset\Z^m$ is a discrete additive subgroup whose linear span is $\R^m$. The basis of $\Lambda$ is a linearly independent set of vectors whose integer linear combinations are exactly $\Lambda$. Every integer lattice is generated as the $\Z$-linear combination of linearly independent vectors $\mat{B}=\{\vec{b}_1,...,\vec{b}_m\}\subset\Z^m$. For a matrix $\mat{A}\in\Z^{n\times m}_q$, we define the ``$q$-ary'' integer lattices:
-$$\Lambda_q^{\bot}=\{\vec{e} \in \Z^m| \mat{A} \vec{e} = \vec{0} \bmod q\},\qquad  \Lambda_q^{\mat{u}}=\{\vec{e}\in\Z^m|\mat{A}\vec{e} = \vec{u} \bmod q\}$$
-It is obvious that $\Lambda_q^{\vec{u}}$ is a coset of $\Lambda_q^{\bot}$.
-
-Let $\Lambda$ be a discrete subset of $\Z^m$. For any vector $\vec{c}\in\R^m$, and any positive parameter $\sigma\in\R$, let $\rho_{\sigma, \vec{c}}(\vec{x})=\exp(-\pi||\vec{x}-\vec{c}||^2 / \sigma^2)$ be the Gaussian function on $\R^m$ with center $\vec{c}$ and parameter $\sigma$. Next, we let $\rho_{\sigma, \vec{c}}(\Lambda)=\sum_{\vec{x}\in\Lambda}\rho_{\sigma, \vec{c}}(\vec{x})$ be the discrete integral of $\rho_{\sigma, \vec{x}}$ over $\Lambda,$ and let $\D_{\Lambda, \sigma, \vec{c}}(\vec{y}):=\frac{\rho_{\sigma, \vec{c}}(\vec{y})}{\rho_{\sigma, \vec{c}}(\Lambda)}$. We abbreviate this as $\D_{\Lambda, \sigma}$ when $\vec{c}=\vec{0}.$
-
-Let $S^m$ denote the set of vectors in $\R^{m}$ whose length is 1. Then the norm of a matrix $\mat{R} \in \R^{m \times m}$ is defined to be $\mathsf{sup}_{\vec{x} \in S^m} ||\mat{R} \vec{x}||$. Then we have the following lemma, which bounds the norm for some specified distributions.
-
-\begin{lemma}[\cite{{EC:AgrBonBoy10}}]\label{lem:bound}
-With respect to the norm defined above, we have the following bounds:
-\begin{itemize}
- \item Let $\mat{R} \in \{-1, 1\}^{m \times m}$ be chosen at random, then we have $\prob[||\mat{R}|| > 12 \sqrt{2m}] < e^{-2m}$.
- \item Let $\mat{R}$ be sampled from $\D_{\Z^{m \times m}, \sigma}$, then we have $\prob [||\mat{R}|| > \sigma \sqrt{m}] < e^{-2m}$.
-\end{itemize}
-\end{lemma}
-
-
-\paragraph{Randomness Extraction.} We will use the following lemma to argue the indistinghishability of two different distributions, which is a generalization of the leftover hash lemma proposed by Dodis et al. \cite{EC:DodReySmi04}.
-
-\begin{lemma}[\cite{EC:AgrBonBoy10}] \label{lem:lhl}
-Suppose that $m > (n + 1) \log q + \omega(\log n)$. Let $\mat{R} \in \{-1, 1\}^{m \times k}$ be chosen uniformly at random for some polynomial $k = k(n)$. Let $\mat{A}, \mat{B}$ be matrix chosen randomly from $\Z^{n \times m}_q, \Z^{n \times k}_q$ respectively. Then, for all vectors $\vec{w} \in \Z^m$, the two following distributions are statistically close:
-$$(\mat{A}, \mat{A} \mat{R}, \mat{R}^\T \vec{w}) \approx (\mat{A}, \mat{B}, \mat{R}^\T \vec{w})$$
-\end{lemma}
-
-\paragraph{Learning With Errors.} The LWE problem was introduced by Regev~\cite{STOC:Regev05}, the works of~\cite{STOC:Regev05,STOC:Peikert09,STOC:BLPRS13} show that the LWE assumption is as hard as (quantum)
-solving GapSVP and SIVP under various parameter regimes.
-\begin{definition}[LWE]\label{defn:lwe}
-For an integer $q = q(n) \geq 2$, and an error distribution $\chi = \chi(n)$ over $\Z_q$, the \emph{Learning With Errors problem $\LWE_{n, m, q, \chi}$} is to distinguish between the following pairs of distributions (e.g. as given by a sampling oracle $\mathcal{O}\in\{\mathcal{O}_{\vec{s}}, \mathcal{O}_{\$}\}$):
-$$\{\mat{A}, \vec{s}^\T \mat{A} + \vec{x}\} \  \text{and} \ \{\mat{A}, \vec{u}\}$$
-where $\mat{A} \overset{\$}{\leftarrow}\Z^{n \times m}_q$, $\vec{s} \overset{\$}{\leftarrow} \Z^n_q$, $\vec{u} \overset{\$}{\leftarrow} \Z^m_q$, and $\vec{x} \overset{\$}{\leftarrow} \chi^m$.
-\end{definition}
-
-
-\paragraph{Two-Sided Trapdoors and Sampling Algorithms.}
-
-We will use the following algorithms to sample short vectors from specified lattices.
-
-\begin{lemma}[\cite{STOC:GenPeiVai08,Alwen2010}] \label{lem:trapgen}
-Let $q, n, m$ be positive integers with $q\geq 2$ and sufficiently large $m = \Omega(n \log q)$. There exists a $\ppt$ algorithm $\trapgen(q, n, m)$ that with overwhelming probability outputs a pair $(\mat{A}\in\Z_q^{n\times m}, \mat{T}_\mat{A} \in\Z^{m\times m})$ such that $\mat{A}$ is statistically close to uniform in $\Z_q^{n\times m}$ and $\mat{T}_\mat{A}$ is a basis for $\Lambda_q^{\bot}(\mat{A})$ satisfying
-$$||\mat{T}_\mat{A}||\leq O(n\log q)\quad\mbox{and}\quad||\widetilde{\mat{T}_{\mat{A}}}||\leq O(\sqrt{n\log q})$$
-except with $\mathsf{negl}(n)$ probability.
-\end{lemma}
-
-\begin{lemma}[\cite{STOC:GenPeiVai08,EC:CHKP10,EC:AgrBonBoy10}] \label{lem:samp}
-Let $q>2, m>n.$ There are two sampling algorithms as follows:
-\begin{itemize}[leftmargin=*]
- \item There is a \ppt\ algorithm $\sampleleft(\mat{A}, \mat{B}, \mat{T}_{\mat{A}}, \vec{u}, s)$, taking as input: (1) a rank-$n$ matrix $\mat{A}\in\Z_q^{n\times m},$ and any matrix $\mat{B}\in\Z_q^{n\times m_1}$, (2) a ``short'' basis $\mat{T}_{\mat{A}}$ for lattice $\Lambda_q^{\bot}(\mat{A})$, a vector $\vec{u}\in\Z_q^n$, (3) a Gaussian parameter $s > ||\widetilde{\mat{T}_{\mat{A}}}||\cdot\omega(\sqrt{\log(m+m_1)})$. Then outputs a vector $\vec r\in\Z^{m+m_1}$ distributed statistically close to $\D_{\Lambda_q^{\vec{u}}(\mat{F}), s}$ where $\mat{F}:=[\mat{A}|\mat{B}]$.
-
- \item There is a \ppt\ algorithm $\sampleright(\mat{A}, \mat{B}, \mat{R}, \mat{T}_{\mat{B}}, \vec{u}, s)$, taking as input: (1) a matrix $\mat{A}\in\Z_q^{n \times m},$ and a rank-$n$ matrix $\mat{B}\in\Z_q^{n\times m}$, a matrix $\mat{R}\in\Z_q^{m \times m},$ where $s_{\mat R} := ||\mat{R}|| = \sup_{\vec{x} : ||\vec{x}||=1}||\mat{R}\vec{x}||$, (2) a ``short'' basis $\mat{T}_{\mat{B}}$ for lattice $\Lambda_q^{\bot}(\mat{B}),$ a vector $\vec{u}\in\Z_q^n$, (3) a Gaussian parameter $s > ||\widetilde{\mat{T}_{\mat{B}}}||\cdot{s_{\mat R}}\cdot\omega(\sqrt{\log{m}})$. Then outputs a vector $\vec{r}\in\Z^{2m}$ distributed statistically close to $\D_{\Lambda_q^{\vec{u}}(\mat{F}), s}$ where $\mat{F}:=(\mat{A}|\mat{A}\mat{R} + \mat{B}).$
-
-\end{itemize}
-\end{lemma}
-
-\paragraph{Gadget Matrix.} We now recall the gadget matrix~\cite{EC:MicPei12,C:AlpPei14}, and the extended gadget matrix technique appeared in~\cite{EPRINT:ApoFanLiu16a}, that are important to our construction.
+\subsection{Gadget Matrix}
+We now recall the gadget matrix~\cite{EC:MicPei12,C:AlpPei14}, and the extended gadget matrix technique appeared in~\cite{EPRINT:ApoFanLiu16a}, that are important to our construction.
 \begin{definition}
 Let $m = n \cdot \lceil\log q \rceil$, and define the gadget matrix
 $$\mat{G}_{n, 2, m} = \vec{g} \otimes \mat{I}_n \in \Z_q^{n \times m}$$
